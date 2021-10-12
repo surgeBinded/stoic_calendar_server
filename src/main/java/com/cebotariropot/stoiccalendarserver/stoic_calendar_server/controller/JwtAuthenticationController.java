@@ -17,19 +17,20 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-
 @RestController
 @CrossOrigin
 public class JwtAuthenticationController {
 
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenUtil jwtTokenUtil;
+    private final JwtUserDetailsService userDetailsService;
 
     @Autowired
-    private JwtTokenUtil jwtTokenUtil;
-
-    @Autowired
-    private JwtUserDetailsService userDetailsService;
+    public JwtAuthenticationController(final AuthenticationManager authenticationManager, final JwtTokenUtil jwtTokenUtil, final JwtUserDetailsService userDetailsService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.userDetailsService = userDetailsService;
+    }
 
     @PostMapping("login")
     public ResponseEntity<?> createAuthenticationToken(@RequestBody JwtRequest authenticationRequest) throws Exception {
@@ -47,7 +48,7 @@ public class JwtAuthenticationController {
     public ResponseEntity<?> saveUser(@RequestBody UserDTO user) throws Exception {
         try {
             return ResponseEntity.ok(userDetailsService.save(user));
-        }catch (UserAlreadyExistsException e){
+        } catch (UserAlreadyExistsException e) {
             return ResponseEntity.badRequest().body("User already exists!");
         }
 

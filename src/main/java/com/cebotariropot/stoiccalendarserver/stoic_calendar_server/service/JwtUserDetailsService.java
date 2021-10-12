@@ -19,16 +19,20 @@ import java.util.List;
 @Service
 public class JwtUserDetailsService implements UserDetailsService {
 
-    @Autowired
-    private UserRepository userDao;
+    private final UserRepository userDao;
+    private final PasswordEncoder bcryptEncoder;
 
     @Autowired
-    private PasswordEncoder bcryptEncoder;
+    public JwtUserDetailsService(final UserRepository userDao, final PasswordEncoder bcryptEncoder) {
+        this.userDao = userDao;
+        this.bcryptEncoder = bcryptEncoder;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        if ("javainuse".equals(username)) {
-            return new User("javainuse", "$2a$10$slYQmyNdGzTn7ZLBXBChFOC9f6kFjAqPhccnP6DxlWXx2lPk1C3G6",
+        if (!username.isEmpty()) {
+            final var user = userDao.findByUsernameLikeIgnoreCase(username);
+            return new User(user.getUsername(), user.getPassword(),
                     new ArrayList<>());
         } else {
             throw new UsernameNotFoundException("User not found with username: " + username);
@@ -39,8 +43,8 @@ public class JwtUserDetailsService implements UserDetailsService {
         DAOUser newUser = new DAOUser();
 
         List<DAOUser> userList = userDao.findAll();
-        boolean useAlreadyExists = userList.stream().anyMatch(daoUser -> daoUser.getUsername().equals(user.getUsername()));
-        if (useAlreadyExists){
+        boolean userAlreadyExists = userList.stream().anyMatch(daoUser -> daoUser.getUsername().equals(user.getUsername()));
+        if (userAlreadyExists) {
             throw new UserAlreadyExistsException("User with the username " + user.getUsername() + " already exists.");
         }
 
